@@ -2,16 +2,17 @@
 // https://hackaday.io/project/202603-esp32-kiss-tnc //
 // AI genrated code modified by 2E0UMR               //
 // use at your own risk                              //
+// Adapted to PlatformIO by W4KRL                    //
 
-#include <Arduino.h>
-#include "BluetoothSerial.h"
+#include <Arduino.h>         // Include the Arduino core for ESP32
+#include "BluetoothSerial.h" // use the built-in BluetoothSerial library
+BluetoothSerial BTSerial;    // Bluetooth KISS Interface
+bool useBluetooth = false;   // Flag to toggle between USB Serial and Bluetooth Serial
 
-#define PIN_ATR 25
-#define PIN_AFR 34
-#define PIN_PTT 4
-
-BluetoothSerial BTSerial;  // Bluetooth KISS Interface
-bool useBluetooth = false;
+// Pin definitions for transceiver interface
+#define PIN_ATR 25 // Audio Frequency Transmit
+#define PIN_AFR 34 // Audio Frequency Receive
+#define PIN_PTT 4  // Push-to-Talk control pin
 
 // KISS protocol special characters
 #define FEND 0xC0  // Frame End
@@ -21,11 +22,10 @@ bool useBluetooth = false;
 
 void setup()
 {
-  Serial.begin(115200);             // USB Serial KISS
-  BTSerial.begin("ESP32_KISS_TNC"); // Bluetooth KISS (change"ESP32_KISS_TNC" to rename bluetooth)
-  pinMode(PIN_PTT, OUTPUT);
-  digitalWrite(PIN_PTT, LOW);
-
+  Serial.begin(115200);             // USB Serial for debugging
+  BTSerial.begin("ESP32_KISS_TNC"); // Advertise this name over Bluetooth
+  pinMode(PIN_PTT, OUTPUT);         // Set PTT pin as output
+  digitalWrite(PIN_PTT, LOW);       // Ensure PTT is low initially (not transmitting)
   Serial.println("ESP32 KISS TNC Ready");
 }
 
@@ -95,7 +95,7 @@ void loop()
   if (Serial.available())
   {
     uint8_t kissFrame[256];
-    size_t len = Serial.readBytes(kissFrame, sizeof(kissFrame));
+    size_t len = BTSerial.readBytes(kissFrame, sizeof(kissFrame));
     transmitAFSK(kissFrame, len);
   }
 
