@@ -4,15 +4,13 @@
 // use at your own risk                              //
 
 #include <Arduino.h>
-// #include "BluetoothSerial.h"
-#include <BleSerial.h>
+#include "BluetoothSerial.h"
 
-#define PIN_ATR 10
-#define PIN_AFR 3
+#define PIN_ATR 25
+#define PIN_AFR 34
 #define PIN_PTT 4
 
-// BluetoothSerial BTSerial;  // Bluetooth KISS Interface
-BleSerial BTSerial; // Bluetooth KISS Interface
+BluetoothSerial BTSerial;  // Bluetooth KISS Interface
 bool useBluetooth = false;
 
 // KISS protocol special characters
