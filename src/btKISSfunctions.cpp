@@ -4,7 +4,7 @@
 BluetoothSerial BTSerial; // Bluetooth KISS Interface
 
 // Pin definitions for transceiver interface
-int PIN_ATR = 25; // Audio Frequency Transmit
+int PIN_AFT = 25; // Audio Frequency Transmit
 int PIN_AFR = 34; // Audio Frequency Receive
 int PIN_PTT = 13; // Push-to-Talk control pin W4KRL version
 
