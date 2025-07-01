@@ -35,18 +35,19 @@
  */
 
 #include <Arduino.h>         // Include the Arduino core for ESP32
-#include "btKISSfunctions.h" // use the built-in BluetoothSerial library
+#include "btFunctions.h" // Implement Bluetooth, KISS, and AFSK functions
+#include "afskFunctions.h"   // Include AFSK modulation functions
 
 /**
- * @brief Initializes serial communication and Bluetooth.
+ * @brief Set up function initializes serial communication and Bluetooth.
  *
  * This function sets up the USB serial port for debugging at 115200 baud
  * and calls the function to initialize Bluetooth serial communication.
- * It should be called once at the start of the program.
  */
 void setup()
 {
   Serial.begin(115200); // USB Serial for debugging
+  setupAFSK();          // Initialize AFSK modulation settings
   setupBluetooth();     // Initialize Bluetooth Serial
 }
 
