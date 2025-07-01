@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "afskFunctions.h"
 #include "btFunctions.h"
+#include "kissFunctions.h"
 
 // Pin definitions for transceiver interface
 int PIN_AFT = 25; // Audio Frequency Transmit

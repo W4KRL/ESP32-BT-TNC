@@ -34,9 +34,10 @@
  * @see https://hackaday.io/project/202603-esp32-kiss-tnc
  */
 
-#include <Arduino.h>         // Include the Arduino core for ESP32
-#include "btFunctions.h" // Implement Bluetooth, KISS, and AFSK functions
-#include "afskFunctions.h"   // Include AFSK modulation functions
+#include <Arduino.h>       // Include the Arduino core for ESP32
+#include "btFunctions.h"   // Implement Bluetooth functions
+#include "afskFunctions.h" // Include AFSK modulation functions
+#include "kissFunctions.h" // Include KISS protocol functions
 
 /**
  * @brief Set up function initializes serial communication and Bluetooth.
