@@ -32,12 +32,16 @@
  * @author AI generated code modified by 2E0UMR, adapted to PlatformIO by W4KRL
  * @see https://uhpowerup.com/
  * @see https://hackaday.io/project/202603-esp32-kiss-tnc
+ * @see https://github.com/rkinnett/Esp32-Bluetooth-KISS-Demo
  */
 
 #include <Arduino.h>       // Include the Arduino core for ESP32
 #include "btFunctions.h"   // Implement Bluetooth functions
 #include "afskFunctions.h" // Include AFSK modulation functions
-#include "kissFunctions.h" // Include KISS protocol functions
+//#include "kissFunctions.h" // Include KISS protocol functions
+#include "kiss.h"          // Include KISS protocol class definition
+
+Kiss kiss; // Create an instance of the Kiss class for KISS protocol handling
 
 /**
  * @brief Set up function initializes serial communication and Bluetooth.
@@ -50,6 +54,8 @@ void setup()
   Serial.begin(115200); // USB Serial for debugging
   setupAFSK();          // Initialize AFSK modulation settings
   setupBluetooth();     // Initialize Bluetooth Serial
+  kiss.setLogTerminal(&Serial);
+  kiss.setKissTerminal(&BTSerial);
 }
 
 /**
@@ -67,12 +73,15 @@ void setup()
 void loop()
 {
   // Check Bluetooth Serial for KISS frames
-  if (BTSerial.available())
-  {
-    uint8_t kissFrame[256];
-    size_t len = BTSerial.readBytes(kissFrame, sizeof(kissFrame));
-    transmitAFSK(kissFrame, len);
-  }
+  // if (BTSerial.available())
+  // {
+  //   uint8_t kissFrame[256];
+  //   size_t len = BTSerial.readBytes(kissFrame, sizeof(kissFrame));
+  //   transmitAFSK(kissFrame, len);
+  // }
 
-  receiveAFSK(); // Process incoming audio
+  // receiveAFSK(); // Process incoming audio
+
+  kiss.receiveFromHost(); // Read KISS frames from Bluetooth Serial
+  delay(10); // Small delay to avoid overwhelming the loop
 }
