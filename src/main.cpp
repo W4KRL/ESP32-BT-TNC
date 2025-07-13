@@ -1,3 +1,6 @@
+//! THIS IS A WORK IN PROGRESS
+//! DO NOT USE FOR TESTING!
+
 /**
  * @file main.cpp
  * @brief ESP32 KISS TNC implementation with Bluetooth and USB Serial support.
@@ -38,10 +41,7 @@
 #include <Arduino.h>       // Include the Arduino core for ESP32
 #include "btFunctions.h"   // Implement Bluetooth functions
 #include "afskFunctions.h" // Include AFSK modulation functions
-//#include "kissFunctions.h" // Include KISS protocol functions
-#include "kiss.h"          // Include KISS protocol class definition
-
-Kiss kiss; // Create an instance of the Kiss class for KISS protocol handling
+#include "kissFunctions.h" // Include KISS protocol functions
 
 /**
  * @brief Set up function initializes serial communication and Bluetooth.
@@ -54,34 +54,28 @@ void setup()
   Serial.begin(115200); // USB Serial for debugging
   setupAFSK();          // Initialize AFSK modulation settings
   setupBluetooth();     // Initialize Bluetooth Serial
-  kiss.setLogTerminal(&Serial);
-  kiss.setKissTerminal(&BTSerial);
 }
 
 /**
  * @brief Main loop function for handling KISS frames and AFSK processing.
  *
- * This function continuously checks for incoming KISS frames on both the USB Serial
- * and Bluetooth Serial interfaces. When data is available, it reads the frame and
+ * This function continuously checks for incoming KISS frames on the 
+ * Bluetooth Serial interface. When data is available, it reads the frame and
  * transmits it using AFSK modulation. Additionally, it processes any incoming audio
  * signals by calling receiveAFSK().
  *
- * - Checks USB Serial for available KISS frames and transmits them via AFSK.
  * - Checks Bluetooth Serial for available KISS frames and transmits them via AFSK.
  * - Continuously processes incoming audio for AFSK reception.
  */
 void loop()
 {
   // Check Bluetooth Serial for KISS frames
-  // if (BTSerial.available())
-  // {
-  //   uint8_t kissFrame[256];
-  //   size_t len = BTSerial.readBytes(kissFrame, sizeof(kissFrame));
-  //   transmitAFSK(kissFrame, len);
-  // }
+  if (BTSerial.available())
+  {
+    uint8_t kissFrame[256];
+    size_t len = BTSerial.readBytes(kissFrame, sizeof(kissFrame));
+    transmitAFSK(kissFrame, len);
+  }
 
-  // receiveAFSK(); // Process incoming audio
-
-  kiss.receiveFromHost(); // Read KISS frames from Bluetooth Serial
-  delay(10); // Small delay to avoid overwhelming the loop
+  receiveAFSK(); // Process incoming audio
 }
