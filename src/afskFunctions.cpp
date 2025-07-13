@@ -6,7 +6,7 @@
 // Pin definitions for transceiver interface
 int PIN_ATR = 25; // Audio from radio
 int PIN_AFR = 34; // Audio to radio
-int PIN_PTT = 13; // Push-to-Talk control pin W4KRL version
+int PIN_PTT = 13; //! Push-to-Talk control pin W4KRL version
 
 void setupAFSK()
 {
