@@ -6,6 +6,6 @@
 
 extern BluetoothSerial BTSerial; // Bluetooth KISS Interface
 
-void setupBluetooth();							// Function to initialize Bluetooth Serial communication
+void setupBluetooth(); // Function to initialize Bluetooth Serial communication
 
 #endif // BTFUNCTIONS_H
