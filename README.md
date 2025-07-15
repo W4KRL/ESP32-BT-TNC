@@ -1,5 +1,9 @@
 # ESP32-BT-TNC
-The ESP32 KISS TNC is a minimalistic design using the fewest necessary components by 2E0UMR
+The ESP32 KISS TNC is a minimalistic design using the fewest necessary components by 2E0UMR.
+
+**This repository is a work in progress. I have not yet built the project so there is no expectation that it will work as-is. There will be changes as the project develops and those changes may make the currect repository obsolete.**
+
+**Note that this version of the 2E0UMR TNC uses the ESP32 DevKit V1 rather than the V4. Adapting the 2E0UMR design to the stripboard layout required changing some GPIO selections.**
 
 # ESP32 KISS TNC Bluetooth setup for APRSdroid  
 
