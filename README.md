@@ -14,6 +14,8 @@ by 2E0UMR
 
 [https://uhpowerup.com/aprsdroid-esp32-kiss-tnc/](https://uhpowerup.com/aprsdroid-esp32-kiss-tnc/)
 
+See also [https://hackaday.io/project/202603-esp32-kiss-tnc](https://hackaday.io/project/202603-esp32-kiss-tnc)
+
 The ESP32 KISS TNC is a minimalistic design using the fewest necessary components. An improved version is in development. In this guide, I’ll show you how to connect the ESP32 KISS TNC to APRSdroid via Bluetooth. For detailed configuration settings, refer to the [official APRSdroid website](https://aprsdroid.org/)—I’ll focus solely on the connection process.
 
 **Pairing:**
