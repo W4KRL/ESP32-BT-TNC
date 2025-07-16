@@ -1,11 +1,16 @@
 # ESP32-BT-TNC
-The ESP32 KISS TNC is a minimalistic design using the fewest necessary components by 2E0UMR.
+Date: 2025-07-16
 
-**This repository is a work in progress. I have not yet built the project so there is no expectation that it will work as-is. There will be changes as the project develops and those changes may make the currect repository obsolete.**
+The ESP32 KISS TNC is a minimalistic design using the fewest necessary components by 2E0UMR. This repository has minor hardware and software differences from 2E0UMR's design.
 
-**Note that this version of the 2E0UMR TNC uses the ESP32 DevKit V1 rather than the V4. Adapting the 2E0UMR design to the stripboard layout required changing some GPIO selections.**
+**This repository is a work in progress. I have not yet built the project so there is no expectation that it will work as-is. There will be changes as the project develops and those changes will make the current repository obsolete.**
+
+**Note that this version of the 2E0UMR TNC uses the ESP32 DevKit V1 rather than the ESP32 DevKit V4. Adapting the 2E0UMR design to the stripboard layout required changing some GPIO selections.**
+
+My intention is to have the TNC located in the trunk of my car with a short connection to the data port of a Yaesu FT880r dual band transceiver. The TNC will serve as a Bluetooth link to my Android phone running APRSdroid. Since I do not anticipate that the unit will receive KISS frames over USB, I am removing that code. I have added a buck converter to step down the car battery voltage to 5 V for the DevKit.
 
 # ESP32 KISS TNC Bluetooth setup for APRSdroid  
+by 2E0UMR
 
 [https://uhpowerup.com/aprsdroid-esp32-kiss-tnc/](https://uhpowerup.com/aprsdroid-esp32-kiss-tnc/)
 
