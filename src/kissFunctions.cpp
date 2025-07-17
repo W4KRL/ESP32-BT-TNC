@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "btFunctions.h" // Include Bluetooth functions
 #include "kissFunctions.h"
 
 // KISS protocol special characters
@@ -7,10 +8,14 @@
 #define TFEND 0xDC // Transposed FEND
 #define TFESC 0xDD // Transposed FESC
 
+const uint8_t KISS_FRAME_FLAG = 0x7E; // KISS frame flag
+
 void sendKISSpacket(uint8_t *data, size_t len)
 {
 	Serial.write(FEND);
+	Serial.write(0x00);
 	BTSerial.write(FEND);
+	BTSerial.write(0x00);
 
 	for (size_t i = 0; i < len; i++)
 	{
@@ -37,3 +42,4 @@ void sendKISSpacket(uint8_t *data, size_t len)
 	Serial.write(FEND);
 	BTSerial.write(FEND);
 }
+

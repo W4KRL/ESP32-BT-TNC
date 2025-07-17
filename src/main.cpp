@@ -18,9 +18,9 @@
  * - Controls PTT (Push-to-Talk) for radio transmission.
  *
  * Pin Definitions:
- * - PIN_ATR (25): Audio Frequency Transmit (not used in this example).
- * - PIN_AFR (34): Audio Frequency Receive (used for analog input and tone output).
- * - PIN_PTT (13): Push-to-Talk control pin.
+ * - TX_PIN (25): Audio Frequency Transmit (not used in this example).
+ * - RX_PIN (34): Audio Frequency Receive (used for analog input and tone output).
+ * - PTT_PIN (13): Push-to-Talk control pin.
  *
  * Usage:
  * - Connect the ESP32 to a radio transceiver using the defined pins.
@@ -38,10 +38,15 @@
  * @see https://github.com/rkinnett/Esp32-Bluetooth-KISS-Demo
  */
 
-#include <Arduino.h>       // Include the Arduino core for ESP32
-#include "btFunctions.h"   // Implement Bluetooth functions
-#include "afskFunctions.h" // Include AFSK modulation functions
-#include "kissFunctions.h" // Include KISS protocol functions
+#include <Arduino.h>        // Include the Arduino core for ESP32
+#include "configuration.h"  // Include configuration settings (WiFi, IP, etc.)
+#include "btFunctions.h"    // Implement Bluetooth functions
+#include "afskFunctions.h"  // Include AFSK modulation functions
+#include "kissFunctions.h"  // Include KISS protocol functions
+#include "wifiConnection.h" // Include WiFi and OTA connection management functions
+#include "ArduinoOTA.h"     // for loop() OTA update
+#include "goertzelFilter.h" // Include Goertzel filter for AFSK demodulation
+#include "driver/ledc.h"
 
 /**
  * @brief Set up function initializes serial communication and Bluetooth.
@@ -52,14 +57,20 @@
 void setup()
 {
   Serial.begin(115200); // USB Serial for debugging
+  wifiBegin();          // Setup WiFi
+  wifiConnect();        // Connect to WiFi
+  otaBegin();           // Initialize Over-The-Air update service
   setupAFSK();          // Initialize AFSK modulation settings
   setupBluetooth();     // Initialize Bluetooth Serial
+
+  analogReadResolution(12);
+  setupGoertzel(); // Initialize Goertzel filter for AFSK demodulation
 }
 
 /**
  * @brief Main loop function for handling KISS frames and AFSK processing.
  *
- * This function continuously checks for incoming KISS frames on the 
+ * This function continuously checks for incoming KISS frames on the
  * Bluetooth Serial interface. When data is available, it reads the frame and
  * transmits it using AFSK modulation. Additionally, it processes any incoming audio
  * signals by calling receiveAFSK().
@@ -69,13 +80,7 @@ void setup()
  */
 void loop()
 {
-  // Check Bluetooth Serial for KISS frames
-  if (BTSerial.available())
-  {
-    uint8_t kissFrame[256];
-    size_t len = BTSerial.readBytes(kissFrame, sizeof(kissFrame));
-    transmitAFSK(kissFrame, len);
-  }
-
-  receiveAFSK(); // Process incoming audio
+  wifiConnect();     // Reconnect to Wi-Fi if disconnected
+  checkBTforData();  // Check Bluetooth Serial for incoming data
+  processGoertzel(); // Decode AFSK
 }
