@@ -3,8 +3,7 @@
 
 #include <Arduino.h>
 
-void setupGoertzel(); // Function to initialize Goertzel filter coefficients
-uint16_t crc16_ccitt(uint8_t* data, size_t len); // Function to calculate CRC16-CCITT
-void processGoertzel(); // Function to process a single sample through the Goertzel filter
+void setupGoertzel();   // Call in setup() to initialize Goertzel filter coefficients
+void processGoertzel(); // Call in loop() to process a single sample through the Goertzel filter
 
 #endif // GOERTZELFILTER_H
