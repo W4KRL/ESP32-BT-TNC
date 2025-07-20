@@ -7,33 +7,16 @@
 
 void setupAFSK()
 {
-  pinMode(TX_PIN, OUTPUT);    // Set AFT pin as output
-  pinMode(RX_PIN, INPUT);     // Set AFR pin as input for analog read
+  pinMode(TX_PIN, OUTPUT);    // Set TX pin as output
+  pinMode(RX_PIN, INPUT);     // Set RX pin as input for analog read
   pinMode(PTT_PIN, OUTPUT);   // Set PTT pin as output
-  digitalWrite(PTT_PIN, LOW); // Ensure PTT is low initially (not transmitting
+  digitalWrite(PTT_PIN, LOW); // Ensure PTT is low initially (not transmitting)
   digitalWrite(PTT_LED, LOW); // Ensure PTT LED is off initially
 
-  // LEDC Timer config
-  ledc_timer_config_t ledc_timer = {
-      LEDC_HIGH_SPEED_MODE, // speed_mode
-      LEDC_TIMER_8_BIT,     // duty_resolution
-      LEDC_TIMER_0,         // timer_num
-      1200,                 // freq_hz
-      LEDC_AUTO_CLK         // clk_cfg
-  };
-  ledc_timer_config(&ledc_timer);
-
-  // LEDC Channel config
-  ledc_channel_config_t ledc_channel = {
-      TX_PIN,               // gpio_num
-      LEDC_HIGH_SPEED_MODE, // speed_mode
-      LEDC_CHANNEL_0,       // channel
-      LEDC_INTR_DISABLE,    // intr_type
-      LEDC_TIMER_0,         // timer_sel
-      127,                  // duty
-      0                     // hpoint
-  };
-  ledc_channel_config(&ledc_channel);
+ // Arduino-style LEDC setup for square wave output
+  ledcSetup(0, 1200, 8);        // channel 0, 1200 Hz, 8-bit resolution
+  ledcAttachPin(TX_PIN, 0);     // attach TX_PIN to channel 0
+  ledcWrite(0, 127);            // 50% duty cycle (127/255 for 8-bit)
 }
 
 size_t ax25Encode(uint8_t *input, size_t len, uint8_t *output)
@@ -93,13 +76,12 @@ void afskSend(uint8_t *bits, size_t len)
   const unsigned long BIT_DURATION_US = 833;
   for (size_t i = 0; i < len; i++)
   {
-    ledc_set_freq(LEDC_HIGH_SPEED_MODE, LEDC_TIMER_0, bits[i] ? 1200 : 2200);
-    ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, 127);
-    ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0);
+    // Change frequency for each bit using Arduino-style API
+    ledcSetup(0, bits[i] ? 1200 : 2200, 8); // channel 0, freq, 8-bit resolution
+    ledcWrite(0, 127);                      // 50% duty cycle
     delayMicroseconds(BIT_DURATION_US);
   }
-  ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, 0);
-  ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0);
+  ledcWrite(0, 0); // Turn off output after sending
 }
 
 void transmitAX25(uint8_t *kissFrame, size_t len)
