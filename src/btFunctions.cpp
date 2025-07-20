@@ -7,23 +7,16 @@ BluetoothSerial BTSerial; // Bluetooth KISS Interface
 
 void setupBluetooth()
 {
-  BTSerial.begin(BT_NAME); // Bluetooth name
-  Serial.printf("%s %s", BT_NAME, "ready");
+  BTSerial.begin(BT_NAME); // Broadcast Bluetooth device name
+  Serial.printf("%s %s\n", BT_NAME, "ready");
 }
 
 void checkBTforData()
 {
-  if (Serial.available())
-  {
-    uint8_t buf[300];
-    size_t len = Serial.readBytes(buf, sizeof(buf));
-    transmitAX25(buf, len);
-  }
-
   if (BTSerial.available())
   {
     uint8_t buf[300];
-    size_t len = BTSerial.readBytes(buf, sizeof(buf));
-    transmitAX25(buf, len);
+    size_t bytesRead = BTSerial.readBytes(buf, sizeof(buf));
+    transmitAX25(buf, bytesRead);
   }
 }
