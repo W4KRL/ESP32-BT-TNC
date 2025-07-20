@@ -1,7 +1,6 @@
 #include "afskFunctions.h"
 
 #include <Arduino.h>
-#include "kissFunctions.h"
 #include "driver/ledc.h"
 #include "configuration.h"
 
@@ -13,14 +12,15 @@ void setupAFSK()
   digitalWrite(PTT_PIN, LOW); // Ensure PTT is low initially (not transmitting)
   digitalWrite(PTT_LED, LOW); // Ensure PTT LED is off initially
 
- // Arduino-style LEDC setup for square wave output
-  ledcSetup(0, 1200, 8);        // channel 0, 1200 Hz, 8-bit resolution
-  ledcAttachPin(TX_PIN, 0);     // attach TX_PIN to channel 0
-  ledcWrite(0, 127);            // 50% duty cycle (127/255 for 8-bit)
+  // Arduino-style LEDC setup for square wave output
+  ledcSetup(0, 1200, 8);    // channel 0, 1200 Hz, 8-bit resolution
+  ledcAttachPin(TX_PIN, 0); // attach TX_PIN to channel 0
+  ledcWrite(0, 127);        // 50% duty cycle (127/255 for 8-bit)
 }
 
 size_t ax25Encode(uint8_t *input, size_t len, uint8_t *output)
 {
+  const uint8_t KISS_FRAME_FLAG = 0x7E; // KISS frame flag
   size_t outIndex = 0;
   output[outIndex++] = KISS_FRAME_FLAG;
   uint8_t buf = 0;
