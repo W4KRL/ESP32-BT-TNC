@@ -43,8 +43,6 @@
 #include "btFunctions.h"    // Implement Bluetooth functions
 #include "afskFunctions.h"  // Include AFSK modulation functions
 #include "kissFunctions.h"  // Include KISS protocol functions
-#include "wifiConnection.h" // Include WiFi and OTA connection management functions
-#include "ArduinoOTA.h"     // for loop() OTA update
 #include "goertzelFilter.h" // Include Goertzel filter for AFSK demodulation
 #include "driver/ledc.h"
 
@@ -57,9 +55,6 @@
 void setup()
 {
   Serial.begin(115200); // USB Serial for debugging
-  wifiBegin();          // Setup WiFi
-  wifiConnect();        // Connect to WiFi
-  otaBegin();           // Initialize Over-The-Air update service
   setupAFSK();          // Initialize AFSK modulation settings
   setupBluetooth();     // Initialize Bluetooth Serial
 
@@ -80,7 +75,6 @@ void setup()
  */
 void loop()
 {
-  wifiConnect();     // Reconnect to Wi-Fi if disconnected
   checkBTforData();  // Check Bluetooth Serial for incoming data
   processGoertzel(); // Decode AFSK
 }
