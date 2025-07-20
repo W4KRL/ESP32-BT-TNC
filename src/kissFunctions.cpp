@@ -12,34 +12,34 @@ const uint8_t KISS_FRAME_FLAG = 0x7E; // KISS frame flag
 
 void sendKISSpacket(uint8_t *data, size_t len)
 {
-	Serial.write(FEND);
-	Serial.write(0x00);
+	// Serial.write(FEND);
+	// Serial.write(0x00);
 	BTSerial.write(FEND);
-	BTSerial.write(0x00);
+	BTSerial.write(0x00); // Indicates start of KISS data frame
 
 	for (size_t i = 0; i < len; i++)
 	{
 		if (data[i] == FEND)
 		{
-			Serial.write(FESC);
-			Serial.write(TFEND);
+			// Serial.write(FESC);
+			// Serial.write(TFEND);
 			BTSerial.write(FESC);
 			BTSerial.write(TFEND);
 		}
 		else if (data[i] == FESC)
 		{
-			Serial.write(FESC);
-			Serial.write(TFESC);
+			// Serial.write(FESC);
+			// Serial.write(TFESC);
 			BTSerial.write(FESC);
 			BTSerial.write(TFESC);
 		}
 		else
 		{
-			Serial.write(data[i]);
+			// Serial.write(data[i]);
 			BTSerial.write(data[i]);
 		}
 	}
-	Serial.write(FEND);
+	// Serial.write(FEND);
 	BTSerial.write(FEND);
 }
 
