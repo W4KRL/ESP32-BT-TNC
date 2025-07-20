@@ -42,7 +42,6 @@
 #include "configuration.h"  // Include configuration settings (WiFi, IP, etc.)
 #include "btFunctions.h"    // Implement Bluetooth functions
 #include "afskFunctions.h"  // Include AFSK modulation functions
-#include "kissFunctions.h"  // Include KISS protocol functions
 #include "goertzelFilter.h" // Include Goertzel filter for AFSK demodulation
 #include "driver/ledc.h"
 
@@ -57,8 +56,6 @@ void setup()
   Serial.begin(115200); // USB Serial for debugging
   setupAFSK();          // Initialize AFSK modulation settings
   setupBluetooth();     // Initialize Bluetooth Serial
-
-  analogReadResolution(12);
   setupGoertzel(); // Initialize Goertzel filter for AFSK demodulation
 }
 
