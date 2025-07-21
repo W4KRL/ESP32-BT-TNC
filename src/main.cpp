@@ -18,9 +18,9 @@
  * - Controls PTT (Push-to-Talk) for radio transmission.
  *
  * Pin Definitions:
- * - TX_PIN (25): Audio Frequency Transmit (not used in this example).
- * - RX_PIN (34): Audio Frequency Receive (used for analog input and tone output).
- * - PTT_PIN (13): Push-to-Talk control pin.
+ * - TX_PIN: Audio Frequency Transmit (not used in this example).
+ * - RX_PIN: Audio Frequency Receive (used for analog input and tone output).
+ * - PTT_PIN: Push-to-Talk control pin.
  *
  * Usage:
  * - Connect the ESP32 to a radio transceiver using the defined pins.
