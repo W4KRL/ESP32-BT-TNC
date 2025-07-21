@@ -38,25 +38,27 @@
  * @see https://github.com/rkinnett/Esp32-Bluetooth-KISS-Demo
  */
 
-#include <Arduino.h>        // Include the Arduino core for ESP32
-#include "configuration.h"  // Include configuration settings (WiFi, IP, etc.)
-#include "btFunctions.h"    // Implement Bluetooth functions
-#include "afskFunctions.h"  // Include AFSK modulation functions
-#include "goertzelFilter.h" // Include Goertzel filter for AFSK demodulation
-#include "driver/ledc.h"
+#include <Arduino.h>       // Include the Arduino core for ESP32
+#include "configuration.h" // Include configuration settings
+#include "btFunctions.h"   // Include Bluetooth functions
+#include "afskEncode.h"    // Include AFSK modulation functions
+#include "afskDecode.h"    // Include AFSK demodulation functions
 
 /**
- * @brief Set up function initializes serial communication and Bluetooth.
+ * @brief Initializes the ESP32 KISS TNC.
  *
- * This function sets up the USB serial port for debugging at 115200 baud
- * and calls the function to initialize Bluetooth serial communication.
+ * This function sets up the necessary components for the KISS TNC:
+ * - Initializes USB Serial communication for debugging.
+ * - Sets up Bluetooth Serial communication.
+ * - Configures AFSK modulation settings.
+ * - Initializes the Goertzel filter for AFSK demodulation.
  */
 void setup()
 {
   Serial.begin(115200); // USB Serial for debugging
-  setupAFSK();          // Initialize AFSK modulation settings
   setupBluetooth();     // Initialize Bluetooth Serial
-  setupGoertzel(); // Initialize Goertzel filter for AFSK demodulation
+  setupAFSKencoder();   // Initialize AFSK modulation settings
+  setupAFSKdecoder();   // Initialize Goertzel filter for AFSK demodulation
 }
 
 /**
@@ -72,6 +74,6 @@ void setup()
  */
 void loop()
 {
-  checkBTforData();  // Check Bluetooth Serial for incoming data
-  processGoertzel(); // Decode AFSK
+  checkBTforData(); // Check Bluetooth Serial for incoming data
+  receiveAFSK();    // Decode AFSK
 }

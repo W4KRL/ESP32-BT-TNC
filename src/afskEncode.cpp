@@ -1,13 +1,33 @@
-#include "afskFunctions.h"
+/**
+ * @file afskEncode.cpp
+ * @brief Implements AFSK (Audio Frequency-Shift Keying) encoding and AX.25 frame transmission for ESP32.
+ *
+ * This file provides functions to set up the AFSK encoder hardware, encode AX.25 frames with bit stuffing,
+ * perform NRZI (Non-Return-to-Zero Inverted) encoding, and transmit the encoded data using AFSK modulation.
+ * It is designed for use with Arduino/ESP32 environments and is suitable for amateur radio packet transmission.
+ *
+ * Functions:
+ * - setupAFSKencoder(): Initializes GPIO pins and configures PWM for AFSK output.
+ * - ax25Encode(): Performs AX.25 bit stuffing and frame flagging on input data.
+ * - nrziEncode(): Applies NRZI encoding to the bit-stuffed data.
+ * - afskSend(): Modulates the encoded bits as AFSK tones and transmits them.
+ * - transmitAX25(): High-level function to transmit a KISS frame as an AX.25 packet using AFSK modulation.
+ *
+ * Dependencies:
+ * - Arduino.h
+ * - configuration.h (defines TX_PIN, RX_PIN, PTT_PIN, PTT_LED, etc.)
+ *
+ * Usage:
+ * Call setupAFSKencoder() during initialization. Use transmitAX25() to send KISS frames.
+ */
+#include "afskEncode.h"
 
 #include <Arduino.h>
-#include "driver/ledc.h"
 #include "configuration.h"
 
-void setupAFSK()
+void setupAFSKencoder()
 {
   pinMode(TX_PIN, OUTPUT);    // Set TX pin as output
-  pinMode(RX_PIN, INPUT);     // Set RX pin as input for analog read
   pinMode(PTT_PIN, OUTPUT);   // Set PTT pin as output
   digitalWrite(PTT_PIN, LOW); // Ensure PTT is low initially (not transmitting)
   digitalWrite(PTT_LED, LOW); // Ensure PTT LED is off initially

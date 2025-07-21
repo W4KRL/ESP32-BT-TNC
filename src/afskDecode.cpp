@@ -1,4 +1,4 @@
-#include "goertzelFilter.h"
+#include "afskDecode.h"
 
 #include <Arduino.h>
 #include "btFunctions.h" // Include Bluetooth functions
@@ -25,13 +25,14 @@ float coeffSpace;
  * Assumes that MARK_FREQ, SPACE_FREQ, SAMPLE_RATE, coeffMark, and coeffSpace are
  * defined and accessible in the current scope.
  */
-void setupGoertzel()
+void setupAFSKdecoder()
 {
 	float omegaMark = 2.0 * PI * MARK_FREQ / SAMPLE_RATE;
 	float omegaSpace = 2.0 * PI * SPACE_FREQ / SAMPLE_RATE;
 	coeffMark = 2.0 * cos(omegaMark);
 	coeffSpace = 2.0 * cos(omegaSpace);
 	analogReadResolution(12); // Set ADC resolution to 12 bits for ESP32
+	pinMode(RX_PIN, INPUT);	  // Set RX pin as input for analog read
 }
 
 /**
@@ -170,7 +171,7 @@ void handleBit(bool bit)
  * - coeffSpace: Goertzel coefficient for the space frequency.
  * - handleBit(bool): Function to handle the detected bit.
  */
-void processGoertzel()
+void receiveAFSK()
 {
 	float qm1 = 0; // Previous sample for mark frequency
 	float qm2 = 0; // Second previous sample for mark frequency
