@@ -22,21 +22,19 @@
  */
 #include "afskEncode.h"
 
-#include <Arduino.h>
-#include "configuration.h"
+#include <Arduino.h>       // Include Arduino core for ESP32
+#include "configuration.h" // for pin definitions
+#include "waveTables.h"    // Include wave tables for AFSK modulation
 
 /**
- * @brief Initializes the AFSK encoder hardware.
+ * @brief Initializes the AFSK encoder hardware and loads necessary wave tables.
  *
- * Configures the necessary pins and sets up the PWM (LEDC) for generating
- * a square wave output at 1200 Hz with 8-bit resolution on the TX pin.
- * Also ensures that the PTT (Push-To-Talk) pin and its associated LED
- * are set to their initial (inactive) states.
+ * Sets up the TX and PTT pins as outputs and ensures the PTT and PTT LED are off initially.
+ * Attempts to load AFSK wave tables from non-volatile storage (NVS). If tables are not found,
+ * generates and stores them in NVS, then halts execution to ensure tables are generated only once.
+ * If tables are successfully loaded, continues normal operation.
  *
- * Pins configured:
- * - TX_PIN: Output for AFSK signal (attached to LEDC channel 0)
- * - PTT_PIN: Output for controlling transmitter keying
- * - PTT_LED: Output for indicating PTT status
+ * Serial output is used for status messages during initialization.
  */
 void setupAFSKencoder()
 {
@@ -45,10 +43,22 @@ void setupAFSKencoder()
   digitalWrite(PTT_PIN, LOW); // Ensure PTT is low initially (not transmitting)
   digitalWrite(PTT_LED, LOW); // Ensure PTT LED is off initially
 
-  // Arduino-style LEDC setup for square wave output
-  ledcSetup(0, 1200, 8);    // channel 0, 1200 Hz, 8-bit resolution
-  ledcAttachPin(TX_PIN, 0); // attach TX_PIN to channel 0
-  ledcWrite(0, 127);        // 50% duty cycle (127/255 for 8-bit)
+  Serial.println("AFSK with Preferences Wave Tables");
+
+  if (!loadTables())
+  {
+    Serial.println("Generating and storing tables in NVS...");
+    generateAndStoreTables();
+    Serial.println("Tables stored. Please restart device to load from NVS.");
+    while (true)
+    {
+      delay(1000);
+    } // halt to ensure single generation
+  }
+  else
+  {
+    Serial.println("Loaded wave tables successfully from NVS.");
+  }
 }
 
 /**
@@ -132,27 +142,32 @@ size_t nrziEncode(uint8_t *input, size_t len, uint8_t *output)
 }
 
 /**
- * @brief Sends a sequence of bits as AFSK (Audio Frequency-Shift Keying) tones.
+ * @brief Transmits a sequence of bits using AFSK (Audio Frequency-Shift Keying) modulation.
  *
- * This function iterates over the provided bit array and transmits each bit
- * by switching between two frequencies (1200 Hz for '1', 2200 Hz for '0') using
- * the Arduino LEDC PWM API. Each bit is transmitted for a fixed duration.
- * After all bits are sent, the output is turned off.
+ * This function encodes each bit in the input array as a tone using either the 1200 Hz or 2200 Hz sine wave table,
+ * depending on the bit value. Each bit is transmitted by outputting the corresponding sine wave samples to the DAC pin.
+ * After all bits are sent, the DAC output is set to its midpoint value.
  *
- * @param bits Pointer to the array of bits to send (each bit should be 0 or 1).
- * @param len Number of bits to send from the array.
+ * @param bits Pointer to the array of bits to transmit (each bit should be 0 or 1).
+ * @param len Number of bits to transmit.
+ *
+ * @note The timing between samples is controlled by delayMicroseconds, based on the SAMPLE_RATE.
+ *       Optionally, a small delay between bits can be added for timing stability.
+ *       Ensure that sine1200, sine2200, TABLE_LEN, SAMPLE_RATE, TX_PIN, and dacWrite are defined elsewhere.
  */
 void afskSend(uint8_t *bits, size_t len)
 {
-  const unsigned long BIT_DURATION_US = 833;// Duration for each bit in microseconds (1200 Hz = 833 us, 2200 Hz = 455 us)
-  for (size_t i = 0; i < len; i++)
-  {
-    // Change frequency for each bit using Arduino-style API
-    ledcSetup(0, bits[i] ? 1200 : 2200, 8); // channel 0, freq, 8-bit resolution
-    ledcWrite(0, 127);                      // 50% duty cycle
-    delayMicroseconds(BIT_DURATION_US);
+  for (size_t bit = 0; bit < len; bit++) {
+    const uint8_t* table = bits[bit] ? sine1200 : sine2200;
+    for (size_t i = 0; i < TABLE_LEN; i++) {
+      dacWrite(TX_PIN, table[i]);
+      delayMicroseconds(1000000 / SAMPLE_RATE);
+    }
+    // Optional: small delay between bits for timing stability
+    // delay(20); // Remove or adjust as needed for your protocol
   }
-  ledcWrite(0, 0); // Turn off output after sending
+  // Optionally, set DAC output to midpoint or zero after transmission
+  dacWrite(TX_PIN, 128); // 128 is midpoint for 8-bit DAC
 }
 
 /**
