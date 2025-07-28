@@ -1,6 +1,8 @@
 //! THIS IS A WORK IN PROGRESS
 //! DO NOT USE FOR TESTING!
 
+//! 2025-07-28
+
 /**
  * @file main.cpp
  * @brief ESP32 KISS TNC implementation with Bluetooth and USB Serial support.
@@ -43,6 +45,7 @@
 #include "btFunctions.h"   // Include Bluetooth functions
 #include "afskEncode.h"    // Include AFSK modulation functions
 #include "afskDecode.h"    // Include AFSK demodulation functions
+#include "timerCode.h"     // Include timer functions for waveform generation
 
 /**
  * @brief Initializes the ESP32 KISS TNC.
@@ -55,10 +58,12 @@
  */
 void setup()
 {
-  Serial.begin(115200); // USB Serial for debugging
-  setupBluetooth();     // Initialize Bluetooth Serial
-  setupAFSKencoder();   // Initialize AFSK modulation settings
-  setupAFSKdecoder();   // Initialize Goertzel filter for AFSK demodulation
+  Serial.begin(115200);   // USB Serial for debugging
+  populateWaveTable(1.0); // Populate the waveform values for AFSK modulation
+  setupTimer();           // Set up the timer for waveform generation
+  setupBluetooth();       // Initialize Bluetooth Serial
+  setupAFSKencoder();     // Initialize AFSK modulation settings
+  setupAFSKdecoder();     // Initialize Goertzel filter for AFSK demodulation
 }
 
 /**
