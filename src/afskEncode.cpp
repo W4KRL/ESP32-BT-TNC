@@ -1,5 +1,6 @@
 /**
  * @file afskEncode.cpp
+ * @date 2025-07-29
  * @brief Implements AFSK (Audio Frequency-Shift Keying) encoding and AX.25 frame transmission for ESP32.
  *
  * This file provides functions to set up the AFSK encoder hardware, encode AX.25 frames with bit stuffing,
@@ -24,7 +25,7 @@
 
 #include <Arduino.h>       // Include Arduino core for ESP32
 #include "configuration.h" // for pin definitions
-#include "waveTables.h"    // Include wave tables for AFSK modulation
+#include "timerCode.h" // Timer setup for waveform generation
 
 /**
  * @brief Initializes the AFSK encoder hardware and loads necessary wave tables.
@@ -38,27 +39,10 @@
  */
 void setupAFSKencoder()
 {
-  pinMode(TX_PIN, OUTPUT);    // Set TX pin as output
+  //! possiblely enable dac_output_enable(DAC_CHANNEL); // Enable DAC output if needed
   pinMode(PTT_PIN, OUTPUT);   // Set PTT pin as output
   digitalWrite(PTT_PIN, LOW); // Ensure PTT is low initially (not transmitting)
   digitalWrite(PTT_LED, LOW); // Ensure PTT LED is off initially
-
-  Serial.println("AFSK with Preferences Wave Tables");
-
-  if (!loadTables())
-  {
-    Serial.println("Generating and storing tables in NVS...");
-    generateAndStoreTables();
-    Serial.println("Tables stored. Please restart device to load from NVS.");
-    while (true)
-    {
-      delay(1000);
-    } // halt to ensure single generation
-  }
-  else
-  {
-    Serial.println("Loaded wave tables successfully from NVS.");
-  }
 }
 
 /**
@@ -157,17 +141,13 @@ size_t nrziEncode(uint8_t *input, size_t len, uint8_t *output)
  */
 void afskSend(uint8_t *bits, size_t len)
 {
-  for (size_t bit = 0; bit < len; bit++) {
-    const uint8_t* table = bits[bit] ? sine1200 : sine2200;
-    for (size_t i = 0; i < TABLE_LEN; i++) {
-      dacWrite(TX_PIN, table[i]);
-      delayMicroseconds(1000000 / SAMPLE_RATE);
-    }
-    // Optional: small delay between bits for timing stability
-    // delay(20); // Remove or adjust as needed for your protocol
-  }
-  // Optionally, set DAC output to midpoint or zero after transmission
-  dacWrite(TX_PIN, 128); // 128 is midpoint for 8-bit DAC
+  // for (size_t bit = 0; bit < len; bit++)
+  // {
+  //   uS_per_sample = TICKS_PER_S / (bits[bit] ? 1200 : 2200) / SAMPLES_PER_CYCLE;
+  //   timerAlarmWrite(timer, uS_per_sample, true);
+  //   Wait for one bit duration (e.g., 833us for 1200 baud)
+  //   delayMicroseconds(1000000 / 1200);
+  // }
 }
 
 /**

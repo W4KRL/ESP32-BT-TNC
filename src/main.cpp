@@ -58,9 +58,12 @@
  */
 void setup()
 {
-  Serial.begin(115200);   // USB Serial for debugging
-  populateWaveTable(1.0); // Populate the waveform values for AFSK modulation
-  setupTimer();           // Set up the timer for waveform generation
+  Serial.begin(115200);                                           // USB Serial for debugging
+  populateWaveTable(1.0);                                         // Populate the waveform values for AFSK modulation
+
+  frequency = 2200;
+  ticksPerSample = TICKS_PER_S / (frequency * SAMPLES_PER_CYCLE); // Calculate the ticks per sample rate
+  setupCallbackTimer(ticksPerSample);                             // Set up the timer to call the onTimer() at the desired sample rate
   setupBluetooth();       // Initialize Bluetooth Serial
   setupAFSKencoder();     // Initialize AFSK modulation settings
   setupAFSKdecoder();     // Initialize Goertzel filter for AFSK demodulation
