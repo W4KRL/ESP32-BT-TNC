@@ -25,7 +25,7 @@
 
 #include <Arduino.h>       // Include Arduino core for ESP32
 #include "configuration.h" // for pin definitions
-#include "timerCode.h" // Timer setup for waveform generation
+#include "timerCode.h"     // Timer setup for waveform generation
 
 /**
  * @brief Initializes the AFSK encoder hardware and loads necessary wave tables.
@@ -141,13 +141,16 @@ size_t nrziEncode(uint8_t *input, size_t len, uint8_t *output)
  */
 void afskSend(uint8_t *bits, size_t len)
 {
-  // for (size_t bit = 0; bit < len; bit++)
-  // {
-  //   uS_per_sample = TICKS_PER_S / (bits[bit] ? 1200 : 2200) / SAMPLES_PER_CYCLE;
-  //   timerAlarmWrite(timer, uS_per_sample, true);
-  //   Wait for one bit duration (e.g., 833us for 1200 baud)
-  //   delayMicroseconds(1000000 / 1200);
-  // }
+  unsigned int sine1200Ticks = TICKS_PER_S / (1200 * SAMPLES_PER_CYCLE); // Index for 1200 Hz sine wave
+  unsigned int sine2200Ticks = TICKS_PER_S / (2200 * SAMPLES_PER_CYCLE); // Index for 2200 Hz sine wave
+
+  for (size_t bit = 0; bit < len; bit++)
+  {
+    ticksPerSample = (bits[bit] ? sine1200Ticks : sine2200Ticks);
+    setupCallbackTimer(ticksPerSample); // Set up timer to call onTimer() at the correct rate
+    // Wait for one bit duration (e.g., 833us for 1200 baud)
+    delayMicroseconds(1000000 / 1200); // 1200 baud rate
+  }
 }
 
 /**
