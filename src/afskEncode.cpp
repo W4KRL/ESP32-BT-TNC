@@ -146,7 +146,8 @@ void afskSend(uint8_t *bits, size_t len)
 
   for (size_t bit = 0; bit < len; bit++)
   {
-    ticksPerSample = (bits[bit] ? sine1200Ticks : sine2200Ticks);
+    // ticksPerSample = (bits[bit] ? sine1200Ticks : sine2200Ticks);
+    ticksPerSample = sine2200Ticks;     // Use 1200 Hz for AFSK modulation
     setupCallbackTimer(ticksPerSample); // Set up timer to call onTimer() at the correct rate
     // Wait for one bit duration (e.g., 833us for 1200 baud)
     delayMicroseconds(1000000 / 1200); // 1200 baud rate
