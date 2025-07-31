@@ -1,48 +1,137 @@
 /**
  * @file afskEncode.cpp
- * @date 2025-07-29
- * @brief Implements AFSK (Audio Frequency-Shift Keying) encoding and AX.25 frame transmission for ESP32.
+ * @date
+ * @brief Implements AFSK (Audio Frequency-Shift Keying) encoding and transmission for AX.25 packet radio on ESP32.
  *
- * This file provides functions to set up the AFSK encoder hardware, encode AX.25 frames with bit stuffing,
- * perform NRZI (Non-Return-to-Zero Inverted) encoding, and transmit the encoded data using AFSK modulation.
- * It is designed for use with Arduino/ESP32 environments and is suitable for amateur radio packet transmission.
+ * This file provides functions to generate sine waveforms for AFSK modulation, perform AX.25 frame encoding with bit-stuffing,
+ * apply NRZI (Non-Return-to-Zero Inverted) encoding, and transmit the resulting data using the ESP32 DAC hardware.
+ * It also manages PTT (Push-To-Talk) control and LED indication for radio transmission.
  *
- * Functions:
- * - setupAFSKencoder(): Initializes GPIO pins and configures PWM for AFSK output.
- * - ax25Encode(): Performs AX.25 bit stuffing and frame flagging on input data.
- * - nrziEncode(): Applies NRZI encoding to the bit-stuffed data.
- * - afskSend(): Modulates the encoded bits as AFSK tones and transmits them.
- * - transmitAX25(): High-level function to transmit a KISS frame as an AX.25 packet using AFSK modulation.
+ * Key Features:
+ * - Sine wave table generation for configurable amplitude and frequency.
+ * - Timer-based DAC output for precise waveform generation.
+ * - AX.25 frame encoding with bit-stuffing and KISS frame flag insertion.
+ * - NRZI encoding for bitstream preparation.
+ * - AFSK transmission at 1200/2200 Hz for AX.25 packet radio.
+ * - PTT and LED control for transmitter keying.
  *
  * Dependencies:
- * - Arduino.h
- * - configuration.h (defines TX_PIN, PTT_PIN, PTT_LED, etc.)
+ * - Arduino core for ESP32
+ * - ESP32 DAC driver
+ * - Pin definitions from configuration.h
  *
  * Usage:
- * Call setupAFSKencoder() during initialization. Use transmitAX25() to send KISS frames.
+ * 1. Call setupAFSKencoder() during initialization to configure hardware and generate wave tables.
+ * 2. Use transmitAX25() to send a KISS frame as an AX.25 packet via AFSK modulation.
+ *
+ * @author AFSK encoding by 2E0UMR
+ * @see https://uhpowerup.com/
+ * @author adapted to PlatformIO, added sinewave generation by W4KRL
+
  */
 #include "afskEncode.h"
 
 #include <Arduino.h>       // Include Arduino core for ESP32
 #include "configuration.h" // for pin definitions
-#include "timerCode.h"     // Timer setup for waveform generation
+#include "driver/dac.h"    // Include DAC driver for audio output
+
+#define DAC_CHANNEL DAC_CHANNEL_1 // the waveform output pin. (e.g., DAC_CHANNEL_1 (25) or DAC_CHANNEL_2 (26))
+
+// Constants for the ESP32 timer and DAC
+// The ESP32 timer runs at 80 MHz, so we need to divide it down for our use
+// The Arduino library includes a macro for the APB clock frequency
+#define TIMER_DIVIDER 8                                    // for 0.1 uS resolution divide ESP32 80 MHz timer by 8
+const uint64_t TICKS_PER_S = APB_CLK_FREQ / TIMER_DIVIDER; // set the timer resolution to 0.1 uS per tick (10 MHz)
+#define MAX_DAC_VALUE 255                                  // the maximum ESP32 DAC value
+uint64_t ticksPerSample = 0;                               // timer ticks per cycle (set at run time)
+hw_timer_t *timer = NULL;                                  // instantiate the timer
+
+// Configurable items
+const unsigned int SAMPLES_PER_CYCLE = 32; // the number of samples per cycle of the waveform power of 2 (e.g., 32, 64, 128, etc.
+float frequency = 1200;                    // the desired frequency (Hz) of the output waveform
+float amplitude = 1.0;                     // the amplitude of the waveform (0.0 to 1.0, where 1.0 is the maximum DAC value)
+
+// the global array that will hold all of the digital waveform values
+unsigned int waveTable[SAMPLES_PER_CYCLE];
 
 /**
- * @brief Initializes the AFSK encoder hardware and loads necessary wave tables.
+ * The function populates the waveValues array with one complete cycle of sinusoid data.
+ * It calculates the value for each sample step based on the desired frequency and amplitude.
+ * The values are calculated using the sine function and scaled to fit within the DAC range.
+ * @param samplesPerCycle The number of samples per cycle of the waveform.
+ * @note The samplesPerCycle should be a power of 2 (e.g., 32, 64, 128, etc.).
+ * @param amplitude The amplitude of the sine wave, scaled to fit within the DAC range.
+ * @note The amplitude should be between 0.0 and 1.0, where 1.0 represents the maximum DAC value.
+ */
+void populateWaveTable(float amplitude)
+{
+  for (int i = 0; i < SAMPLES_PER_CYCLE; i++)
+  {
+    float angleInRadians = float(i) * 2.0 * PI / float(SAMPLES_PER_CYCLE);
+    waveTable[i] = round((MAX_DAC_VALUE / 2.0) + (amplitude * (MAX_DAC_VALUE / 2.0) * sin(angleInRadians)));
+    // Serial.printf("step: %d, radians: %.6f, value: %d\n", i, angleInRadians, value);
+  }
+}
+
+/**
+ * @brief Initializes the AFSK encoder and sets up the DAC output.
  *
- * Sets up the TX and PTT pins as outputs and ensures the PTT and PTT LED are off initially.
- * Attempts to load AFSK wave tables from non-volatile storage (NVS). If tables are not found,
- * generates and stores them in NVS, then halts execution to ensure tables are generated only once.
- * If tables are successfully loaded, continues normal operation.
- *
- * Serial output is used for status messages during initialization.
+ * This function configures the PTT pin, PTT LED pin, populates the waveform table,
+ * and enables the DAC output. It ensures that the PTT is initially low (not transmitting)
+ * and sets the DAC output to a midpoint value.
  */
 void setupAFSKencoder()
 {
-  //! possiblely enable dac_output_enable(DAC_CHANNEL); // Enable DAC output if needed
-  pinMode(PTT_PIN, OUTPUT);   // Set PTT pin as output
-  digitalWrite(PTT_PIN, LOW); // Ensure PTT is low initially (not transmitting)
-  digitalWrite(PTT_LED, LOW); // Ensure PTT LED is off initially
+  pinMode(PTT_PIN, OUTPUT);             // Set PTT pin as output
+  pinMode(PTT_LED, OUTPUT);             // Set PTT LED pin as output
+  digitalWrite(PTT_PIN, LOW);           // Ensure PTT is low initially (not transmitting)
+  digitalWrite(PTT_LED, LOW);           // Ensure PTT LED is off initially
+  populateWaveTable(1.0);               // Populate the waveform values for AFSK modulation
+  dac_output_enable(DAC_CHANNEL);       // Enable DAC output on the specified channel
+  dac_output_voltage(DAC_CHANNEL, 128); // Set DAC output to midpoint (half the DAC range, not true 0V)
+}
+
+/**
+ * @brief Timer interrupt service routine for waveform output.
+ *
+ * This function is marked with IRAM_ATTR to ensure it is placed in IRAM for fast execution,
+ * as it is called from a hardware timer interrupt. It outputs the next value
+ * from a precomputed waveform table to the DAC, cycling through the table to generate a
+ * continuous waveform. The function maintains a static index to track the current position
+ * in the waveform table and wraps around when the end of the table is reached.
+ *
+ * MARK and SPACE waveforms are nearly phase continuous due to no reset of currentSampleIdx.
+ *
+ * Note: All operations and function calls within this ISR must be IRAM-safe.
+ */
+void IRAM_ATTR onTimer()
+{
+  static unsigned currentSampleIdx = 0;                    // static variable to keep track of the current sample index
+  unsigned int sampleValue = waveTable[currentSampleIdx];  // get the waveform value from the array
+  dac_output_voltage(DAC_CHANNEL, sampleValue);            // output the voltage to the DAC_CHANNEL (IRAM-safe)
+  currentSampleIdx++;                                      // advance the array index
+  currentSampleIdx = currentSampleIdx % SAMPLES_PER_CYCLE; // reset the index if it exceeds the array size
+}
+
+/**
+ * @brief Sets up the timer to call the onTimer() function at the desired sample rate
+ *
+ * The timer will call the onTimer() function at the precise rate needed to produce
+ * the desired output frequency.
+ */
+void setupCallbackTimer(uint64_t ticks_per_sample)
+{
+  // The rate at which the timer will call the onTimer() function
+  // is ticks_per_sample times the timer resolution (0.1 uS)
+  // Timer resolution is TIMER_DIVIDER / APB_CLK_FREQ
+  int timerId = 0;        // use ESP32 timer 0
+  bool countUp = true;    // count up from 0 to the alarm value
+  bool autoreload = true; // auto-reload the timer after each callback
+  bool edge = true;       // edge-triggered interrupt
+
+  timerAttachInterrupt(timer, onTimer, edge);
+  timerAlarmWrite(timer, ticks_per_sample, autoreload);
+  timerAlarmEnable(timer);
 }
 
 /**
@@ -141,17 +230,23 @@ size_t nrziEncode(uint8_t *input, size_t len, uint8_t *output)
  */
 void afskSend(uint8_t *bits, size_t len)
 {
-  unsigned int sine1200Ticks = TICKS_PER_S / (1200 * SAMPLES_PER_CYCLE); // Index for 1200 Hz sine wave
-  unsigned int sine2200Ticks = TICKS_PER_S / (2200 * SAMPLES_PER_CYCLE); // Index for 2200 Hz sine wave
-
+  unsigned int ticksPerSample1200 = TICKS_PER_S / (1200 * SAMPLES_PER_CYCLE); // Ticks per sample for 1200 Hz
+  unsigned int ticksPerSample2200 = TICKS_PER_S / (2200 * SAMPLES_PER_CYCLE); // Ticks per sample for 2200 Hz
+  timerAlarmEnable(timer);                                                    // Enable the timer to start generating the waveform
   for (size_t bit = 0; bit < len; bit++)
   {
-    // ticksPerSample = (bits[bit] ? sine1200Ticks : sine2200Ticks);
-    ticksPerSample = sine2200Ticks;     // Use 1200 Hz for AFSK modulation
-    setupCallbackTimer(ticksPerSample); // Set up timer to call onTimer() at the correct rate
-    // Wait for one bit duration (e.g., 833us for 1200 baud)
-    delayMicroseconds(1000000 / 1200); // 1200 baud rate
+    // If the current bit is '1', use 1200 Hz (sine1200Ticks); if '0', use 2200 Hz (sine2200Ticks)
+    ticksPerSample = (bits[bit] ? ticksPerSample1200 : ticksPerSample2200);
+    timerAlarmWrite(timer, ticksPerSample, true);
+
+    uint64_t start = micros(); // Get the current time in microseconds
+    while ((micros() - start) < (1000000 / 1200))
+    {
+      yield(); // Yield to allow other tasks to run (optional)
+    }
   }
+  timerAlarmDisable(timer);                           // Disable the timer after sending all bits
+  dac_output_voltage(DAC_CHANNEL, MAX_DAC_VALUE / 2); // Set DAC output to midpoint (half the DAC range)
 }
 
 /**

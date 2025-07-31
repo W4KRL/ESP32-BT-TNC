@@ -1,7 +1,7 @@
 //! THIS IS A WORK IN PROGRESS
 //! DO NOT USE FOR TESTING!
 
-//! 2025-07-28
+//! 2025-07-31
 
 /**
  * @file main.cpp
@@ -20,9 +20,10 @@
  * - Controls PTT (Push-to-Talk) for radio transmission.
  *
  * Pin Definitions:
- * - TX_PIN: Audio Frequency Transmit (not used in this example).
- * - RX_PIN: Audio Frequency Receive (used for analog input and tone output).
+ * - DAC_CHANNEL_1: Audio Frequency Transmit.
+ * - RX_PIN: Audio Frequency Receive (used for analog input).
  * - PTT_PIN: Push-to-Talk control pin.
+ * - PTT_LED: LED to indicate PTT status.
  *
  * Usage:
  * - Connect the ESP32 to a radio transceiver using the defined pins.
@@ -45,7 +46,6 @@
 #include "btFunctions.h"   // Include Bluetooth functions
 #include "afskEncode.h"    // Include AFSK modulation functions
 #include "afskDecode.h"    // Include AFSK demodulation functions
-#include "timerCode.h"     // Include timer functions for waveform generation
 
 /**
  * @brief Initializes the ESP32 KISS TNC.
@@ -58,15 +58,10 @@
  */
 void setup()
 {
-  Serial.begin(115200);                                           // USB Serial for debugging
-  populateWaveTable(1.0);                                         // Populate the waveform values for AFSK modulation
-
-  frequency = 2200;
-  ticksPerSample = TICKS_PER_S / (frequency * SAMPLES_PER_CYCLE); // Calculate the ticks per sample rate
-  setupCallbackTimer(ticksPerSample);                             // Set up the timer to call the onTimer() at the desired sample rate
-  setupBluetooth();       // Initialize Bluetooth Serial
-  setupAFSKencoder();     // Initialize AFSK modulation settings
-  setupAFSKdecoder();     // Initialize Goertzel filter for AFSK demodulation
+  Serial.begin(115200); // USB Serial for debugging
+  setupBluetooth();     // Initialize Bluetooth Serial
+  setupAFSKencoder();   // Initialize AFSK modulation settings
+  setupAFSKdecoder();   // Initialize Goertzel filter for AFSK demodulation
 }
 
 /**
