@@ -40,11 +40,11 @@
 // Constants for the ESP32 timer and DAC
 // The ESP32 timer runs at 80 MHz, so we need to divide it down for our use
 // The Arduino library includes a macro for the APB clock frequency
-#define TIMER_DIVIDER 8                                    // for 0.1 uS resolution divide ESP32 80 MHz timer by 8
-const uint64_t TICKS_PER_S = APB_CLK_FREQ / TIMER_DIVIDER; // set the timer resolution to 0.1 uS per tick (10 MHz)
-#define MAX_DAC_VALUE 255                                  // the maximum ESP32 DAC value
-uint64_t ticksPerSample = 0;                               // timer ticks per cycle (set at run time)
-hw_timer_t *timer = NULL;                                  // instantiate the timer
+#define TIMER_DIVIDER 8                                         // for 0.1 uS resolution divide ESP32 80 MHz timer by 8
+const uint64_t TICKS_PER_SECOND = APB_CLK_FREQ / TIMER_DIVIDER; // set the timer resolution to 0.1 uS per tick (10 MHz)
+#define MAX_DAC_VALUE 255                                       // the maximum ESP32 DAC value
+uint64_t ticksPerSample = 0;                                    // timer ticks per cycle (set at run time)
+hw_timer_t *timer = NULL;                                       // instantiate the timer
 
 // Configurable items
 const unsigned int SAMPLES_PER_CYCLE = 32; // the number of samples per cycle of the waveform power of 2 (e.g., 32, 64, 128, etc.
@@ -71,24 +71,6 @@ void populateWaveTable(float amplitude)
     waveTable[i] = round((MAX_DAC_VALUE / 2.0) + (amplitude * (MAX_DAC_VALUE / 2.0) * sin(angleInRadians)));
     // Serial.printf("step: %d, radians: %.6f, value: %d\n", i, angleInRadians, value);
   }
-}
-
-/**
- * @brief Initializes the AFSK encoder and sets up the DAC output.
- *
- * This function configures the PTT pin, PTT LED pin, populates the waveform table,
- * and enables the DAC output. It ensures that the PTT is initially low (not transmitting)
- * and sets the DAC output to a midpoint value.
- */
-void setupAFSKencoder()
-{
-  pinMode(PTT_PIN, OUTPUT);             // Set PTT pin as output
-  pinMode(PTT_LED, OUTPUT);             // Set PTT LED pin as output
-  digitalWrite(PTT_PIN, LOW);           // Ensure PTT is low initially (not transmitting)
-  digitalWrite(PTT_LED, LOW);           // Ensure PTT LED is off initially
-  populateWaveTable(1.0);               // Populate the waveform values for AFSK modulation
-  dac_output_enable(DAC_CHANNEL);       // Enable DAC output on the specified channel
-  dac_output_voltage(DAC_CHANNEL, 128); // Set DAC output to midpoint (half the DAC range, not true 0V)
 }
 
 /**
@@ -129,9 +111,28 @@ void setupCallbackTimer(uint64_t ticks_per_sample)
   bool autoreload = true; // auto-reload the timer after each callback
   bool edge = true;       // edge-triggered interrupt
 
-  timerAttachInterrupt(timer, onTimer, edge);
   timerAlarmWrite(timer, ticks_per_sample, autoreload);
   timerAlarmEnable(timer);
+}
+
+/**
+ * @brief Initializes the AFSK encoder and sets up the DAC output.
+ *
+ * This function configures the PTT pin, PTT LED pin, populates the waveform table,
+ * and enables the DAC output. It ensures that the PTT is initially low (not transmitting)
+ * and sets the DAC output to a midpoint value.
+ */
+void setupAFSKencoder()
+{
+  pinMode(PTT_PIN, OUTPUT);                   // Set PTT pin as output
+  pinMode(PTT_LED, OUTPUT);                   // Set PTT LED pin as output
+  digitalWrite(PTT_PIN, LOW);                 // Ensure PTT is low initially (not transmitting)
+  digitalWrite(PTT_LED, LOW);                 // Ensure PTT LED is off initially
+  populateWaveTable(1.0);                     // Populate the waveform values for AFSK modulation
+  dac_output_enable(DAC_CHANNEL);             // Enable DAC output on the specified channel
+  dac_output_voltage(DAC_CHANNEL, 128);       // Set DAC output to midpoint (half the DAC range, not true 0V)
+  timer = timerBegin(0, TIMER_DIVIDER, true); // Initialize the timer with ID 0, divider, and count up
+  timerAttachInterrupt(timer, onTimer, true); // Attach the timer interrupt handler
 }
 
 /**
@@ -230,13 +231,14 @@ size_t nrziEncode(uint8_t *input, size_t len, uint8_t *output)
  */
 void afskSend(uint8_t *bits, size_t len)
 {
-  unsigned int ticksPerSample1200 = TICKS_PER_S / (1200 * SAMPLES_PER_CYCLE); // Ticks per sample for 1200 Hz
-  unsigned int ticksPerSample2200 = TICKS_PER_S / (2200 * SAMPLES_PER_CYCLE); // Ticks per sample for 2200 Hz
-  timerAlarmEnable(timer);                                                    // Enable the timer to start generating the waveform
+  const uint64_t TICKS_PER_SAMPLE1200 = TICKS_PER_SECOND / (1200 * SAMPLES_PER_CYCLE); // Ticks per sample for 1200 Hz
+  const uint64_t TICKS_PER_SAMPLE2200 = TICKS_PER_SECOND / (2200 * SAMPLES_PER_CYCLE); // Ticks per sample for 2200 Hz
+
+  timerAlarmEnable(timer); // Enable the timer to start generating the waveform
   for (size_t bit = 0; bit < len; bit++)
   {
     // If the current bit is '1', use 1200 Hz (sine1200Ticks); if '0', use 2200 Hz (sine2200Ticks)
-    ticksPerSample = (bits[bit] ? ticksPerSample1200 : ticksPerSample2200);
+    ticksPerSample = (bits[bit] ? TICKS_PER_SAMPLE1200 : TICKS_PER_SAMPLE2200);
     timerAlarmWrite(timer, ticksPerSample, true);
 
     uint64_t start = micros(); // Get the current time in microseconds

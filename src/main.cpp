@@ -47,6 +47,9 @@
 #include "afskEncode.h"    // Include AFSK modulation functions
 #include "afskDecode.h"    // Include AFSK demodulation functions
 
+#define TEST_TONE_LEN 100 // Number of bits to send (arbitrary, large enough for continuous tone)
+uint8_t testTone[TEST_TONE_LEN];
+
 /**
  * @brief Initializes the ESP32 KISS TNC.
  *
@@ -62,6 +65,12 @@ void setup()
   setupBluetooth();     // Initialize Bluetooth Serial
   setupAFSKencoder();   // Initialize AFSK modulation settings
   setupAFSKdecoder();   // Initialize Goertzel filter for AFSK demodulation
+
+  // Fill testTone with all 1s for 1200 Hz, 0s for 2200 Hz
+  for (int i = 0; i < TEST_TONE_LEN; i++)
+  {
+    testTone[i] = (i % 2);  // Alternating pattern for testing
+  }
 }
 
 /**
@@ -79,4 +88,7 @@ void loop()
 {
   checkBTforData(); // Check Bluetooth Serial for incoming data
   receiveAFSK();    // Decode AFSK
+
+  // afskSend(testTone, TEST_TONE_LEN); // Force continuous 1200 Hz transmission
+  // delay(10);                         // Prevent watchdog reset
 }

@@ -18,4 +18,6 @@
 void setupAFSKencoder();
 void transmitAX25(uint8_t *kissFrame, size_t len);
 
+void afskSend(uint8_t *data, size_t len); // for testing purposes, sends a sequence of bits using AFSK modulation
+
 #endif // AFSK_ENCODE_H
