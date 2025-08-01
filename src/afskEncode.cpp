@@ -76,7 +76,7 @@ void populateWaveTable(float amplitude)
 /**
  * @brief Timer interrupt service routine for waveform output.
  *
- * This function is marked with IRAM_ATTR to ensure it is placed in IRAM for fast execution,
+ * This function is marked with IRAM_ATTR to ensure it is placed in IRAM for fast execution
  * as it is called from a hardware timer interrupt. It outputs the next value
  * from a precomputed waveform table to the DAC, cycling through the table to generate a
  * continuous waveform. The function maintains a static index to track the current position
@@ -106,12 +106,8 @@ void setupCallbackTimer(uint64_t ticks_per_sample)
   // The rate at which the timer will call the onTimer() function
   // is ticks_per_sample times the timer resolution (0.1 uS)
   // Timer resolution is TIMER_DIVIDER / APB_CLK_FREQ
-  int timerId = 0;        // use ESP32 timer 0
-  bool countUp = true;    // count up from 0 to the alarm value
-  bool autoreload = true; // auto-reload the timer after each callback
-  bool edge = true;       // edge-triggered interrupt
 
-  timerAlarmWrite(timer, ticks_per_sample, autoreload);
+  timerAlarmWrite(timer, ticks_per_sample, true); // autoreload = true
   timerAlarmEnable(timer);
 }
 
@@ -125,8 +121,8 @@ void setupCallbackTimer(uint64_t ticks_per_sample)
 void setupAFSKencoder()
 {
   pinMode(PTT_PIN, OUTPUT);                   // Set PTT pin as output
-  pinMode(PTT_LED, OUTPUT);                   // Set PTT LED pin as output
   digitalWrite(PTT_PIN, LOW);                 // Ensure PTT is low initially (not transmitting)
+  pinMode(PTT_LED, OUTPUT);                   // Set PTT LED pin as output
   digitalWrite(PTT_LED, LOW);                 // Ensure PTT LED is off initially
   populateWaveTable(1.0);                     // Populate the waveform values for AFSK modulation
   dac_output_enable(DAC_CHANNEL);             // Enable DAC output on the specified channel
