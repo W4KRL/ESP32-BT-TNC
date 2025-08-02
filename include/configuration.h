@@ -22,10 +22,14 @@
 #include <Arduino.h> // for IPAddress
 
 // Bluetooth device name for the KISS TNC
-inline const char *BT_NAME = "ESP32 KISS TNC";
+#define BT_NAME "ESP32 KISS TNC"
 
 // Pin definitions for transceiver interface
-//! NOTE: The AFSK output pin is defined in afskEncode.cpp as DAC_CHANNEL_1 (GPIO25)
-inline const int PTT_PIN = 4;			// Push-to-Talk control pin
-inline const int PTT_LED = LED_BUILTIN; // LED to indicate PTT status
-inline const int RX_PIN = 34;			// Audio from radio
+#define RX_PIN 34			 // Audio from radio
+#define TX_PIN DAC_CHANNEL_1 // AFSK audio output pin must use DAC_CHANNEL_1, not GPIO25
+#define PTT_PIN 4			 // Push-to-Talk control pin
+#ifndef LED_BUILTIN			 // LED to indicate PTT status
+#define PTT_LED 2			 // Use GPIO2 if LED_BUILTIN is not defined
+#else
+#define PTT_LED LED_BUILTIN
+#endif
