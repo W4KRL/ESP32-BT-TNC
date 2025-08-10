@@ -65,10 +65,13 @@ unsigned int waveTable[SAMPLES_PER_CYCLE];
  */
 void populateWaveTable(float amplitude)
 {
+  unsigned int MIDPOINT = MAX_DAC_VALUE / 2; // midpoint value for the DAC output
+  // Populate the waveTable with one complete cycle of a sine wave
   for (int i = 0; i < SAMPLES_PER_CYCLE; i++)
   {
     float angleInRadians = float(i) * 2.0 * PI / float(SAMPLES_PER_CYCLE);
-    waveTable[i] = round((MAX_DAC_VALUE / 2.0) + (amplitude * (MAX_DAC_VALUE / 2.0) * sin(angleInRadians)));
+    // waveTable[i] = round((MAX_DAC_VALUE / 2.0) + (amplitude * (MAX_DAC_VALUE / 2.0) * sin(angleInRadians)));
+    waveTable[i] = round(MIDPOINT * (1.0 + amplitude * sin(angleInRadians))); // Calculate the sine value and scale it to the DAC range
     // Serial.printf("step: %d, radians: %.6f, value: %d\n", i, angleInRadians, value);
   }
 }
