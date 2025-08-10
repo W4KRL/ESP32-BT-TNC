@@ -24,6 +24,15 @@
 // Bluetooth device name for the KISS TNC
 #define BT_NAME "ESP32 KISS TNC"
 
+// WiFi Credentials
+inline const char *WIFI_SSID = "DCMNET";
+inline const char *WIFI_PASSWORD = "0F1A2D3E4D5G6L7O8R9Y";
+
+// Static IP Settings
+inline const IPAddress LOCAL_IP(192, 168, 0, 234);
+inline const IPAddress GATEWAY(192, 168, 0, 1);
+inline const IPAddress SUBNET(255, 255, 255, 0);
+
 // Pin definitions for transceiver interface
 #define RX_PIN 34			 // Audio from radio
 #define TX_PIN DAC_CHANNEL_1 // AFSK audio output pin must use DAC_CHANNEL_1, not GPIO25
