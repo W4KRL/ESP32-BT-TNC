@@ -1,0 +1,117 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build USB Environment",
+			"type": "shell",
+			"command": "${userHome}\\.platformio\\penv\\Scripts\\pio.exe",
+			"args": [
+				"run",
+				"-e",
+				"usb"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$platformio"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Build OTA Environment",
+			"type": "shell",
+			"command": "${userHome}\\.platformio\\penv\\Scripts\\pio.exe",
+			"args": [
+				"run",
+				"-e",
+				"ota"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$platformio"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Upload via USB",
+			"type": "shell",
+			"command": "${userHome}\\.platformio\\penv\\Scripts\\pio.exe",
+			"args": [
+				"run",
+				"-e",
+				"usb",
+				"-t",
+				"upload"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$platformio"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Upload via OTA",
+			"type": "shell",
+			"command": "${userHome}\\.platformio\\penv\\Scripts\\pio.exe",
+			"args": [
+				"run",
+				"-e",
+				"ota",
+				"-t",
+				"upload"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$platformio"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Upload USB + Monitor",
+			"type": "shell",
+			"command": "${userHome}\\.platformio\\penv\\Scripts\\pio.exe",
+			"args": [
+				"run",
+				"-e",
+				"usb",
+				"-t",
+				"upload",
+				"-t",
+				"monitor"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$platformio"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Serial Monitor",
+			"type": "shell",
+			"command": "${userHome}\\.platformio\\penv\\Scripts\\pio.exe",
+			"args": [
+				"device",
+				"monitor"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$platformio"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "Clean Build",
+			"type": "shell",
+			"command": "${userHome}\\.platformio\\penv\\Scripts\\pio.exe",
+			"args": [
+				"run",
+				"-t",
+				"clean"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$platformio"
+			],
+			"isBackground": false
+		}
+	]
+}
