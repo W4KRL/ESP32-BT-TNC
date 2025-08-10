@@ -35,17 +35,19 @@
  * - Proper AFSK implementation requires more advanced signal processing.
  * - Use at your own risk; modifications may be required for specific hardware setups.
  *
- * @author AI generated code modified by 2E0UMR, adapted to PlatformIO by W4KRL
+ * @author 2E0UMR, adapted to PlatformIO by W4KRL
  * @see https://uhpowerup.com/
  * @see https://hackaday.io/project/202603-esp32-kiss-tnc
  * @see https://github.com/rkinnett/Esp32-Bluetooth-KISS-Demo
  */
 
-#include <Arduino.h>       // Include the Arduino core for ESP32
-#include "configuration.h" // Include configuration settings
-#include "btFunctions.h"   // Include Bluetooth functions
-#include "afskEncode.h"    // Include AFSK modulation functions
-#include "afskDecode.h"    // Include AFSK demodulation functions
+#include <Arduino.h>        // Include the Arduino core for ESP32
+#include "configuration.h"  // Include configuration settings
+#include "btFunctions.h"    // Include Bluetooth functions
+#include "afskEncode.h"     // Include AFSK modulation functions
+#include "afskDecode.h"     // Include AFSK demodulation functions
+#include "wifiConnection.h" // Include WiFi connection functions
+#include "ArduinoOTA.h"     // Include OTA update functions
 
 #define TEST_TONE_LEN 100 // Number of bits to send (arbitrary, large enough for continuous tone)
 uint8_t testTone[TEST_TONE_LEN];
@@ -63,13 +65,18 @@ void setup()
 {
   Serial.begin(115200); // USB Serial for debugging
   setupBluetooth();     // Initialize Bluetooth Serial
+  wifiBegin();          // Setup WiFi
+  wifiConnect();        // Connect to WiFi
+  ArduinoOTA.begin();   // Initialize OTA updates
   setupAFSKencoder();   // Initialize AFSK modulation settings
   setupAFSKdecoder();   // Initialize Goertzel filter for AFSK demodulation
 
-  // Fill testTone with all 1s for 1200 Hz, 0s for 2200 Hz
+  // Fill testTone with all 1s for 1200 Hz, 0s for 2200 Hz, or i % 2 for alternating tones
   for (int i = 0; i < TEST_TONE_LEN; i++)
   {
-    testTone[i] = (i % 2);  // Alternating pattern for testing
+    // testTone[i] = (i % 2); // Alternating pattern for testing
+    // testTone[i] = 0; // 0s for 2200 Hz
+    testTone[i] = 1; // 1s for 1200 Hz
   }
 }
 
@@ -86,9 +93,11 @@ void setup()
  */
 void loop()
 {
-  checkBTforData(); // Check Bluetooth Serial for incoming data
-  receiveAFSK();    // Decode AFSK
+  wifiConnect();       // Reconnect to Wi-Fi if disconnected
+  ArduinoOTA.handle(); // Check for OTA updates
+  // checkBTforData(); // Check Bluetooth Serial for incoming data
+  // receiveAFSK();    // Decode AFSK
 
-  // afskSend(testTone, TEST_TONE_LEN); // Force continuous 1200 Hz transmission
+  afskSend(testTone, TEST_TONE_LEN); // Force continuous 1200 Hz transmission
   // delay(10);                         // Prevent watchdog reset
 }
