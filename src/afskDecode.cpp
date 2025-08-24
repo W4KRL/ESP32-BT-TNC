@@ -171,28 +171,28 @@ void handleBit(bool bit)
  * - coeffSpace: Goertzel coefficient for the space frequency.
  * - handleBit(bool): Function to handle the detected bit.
  */
-	void receiveAFSK()
+void receiveAFSK()
+{
+	float qm1 = 0; // Previous sample for mark frequency
+	float qm2 = 0; // Second previous sample for mark frequency
+	float qs1 = 0; // Previous sample for space frequency
+	float qs2 = 0; // Second previous sample for space frequency
+	// Read a sample from the ADC, centered around the ADC midpoint
+	// and process it through mark and space Goertzel filters
+	for (int i = 0; i < GOERTZEL_N; i++)
 	{
-		float qm1 = 0; // Previous sample for mark frequency
-		float qm2 = 0; // Second previous sample for mark frequency
-		float qs1 = 0; // Previous sample for space frequency
-		float qs2 = 0; // Second previous sample for space frequency
-		// Read a sample from the ADC, centered around the ADC midpoint
-		// and process it through mark and space Goertzel filters
-		for (int i = 0; i < GOERTZEL_N; i++)
-		{
-			int sample = analogRead(RX_PIN) - ADC_MIDPOINT;
-			float in = (float)sample;
-			float new_qm = coeffMark * qm1 - qm2 + in;
-			float new_qs = coeffSpace * qs1 - qs2 + in;
-			qm2 = qm1;
-			qm1 = new_qm;
-			qs2 = qs1;
-			qs1 = new_qs;
-		}
-		// Calculate the squared magnitude for each frequency using the Goertzel algorithm
-		float magMark = qm1 * qm1 + qm2 * qm2 - qm1 * qm2 * coeffMark;
-		float magSpace = qs1 * qs1 + qs2 * qs2 - qs1 * qs2 * coeffSpace;
-		bool bit = magMark > magSpace;
-		handleBit(bit);
+		int sample = analogRead(RX_PIN) - ADC_MIDPOINT;
+		float in = (float)sample;
+		float new_qm = coeffMark * qm1 - qm2 + in;
+		float new_qs = coeffSpace * qs1 - qs2 + in;
+		qm2 = qm1;
+		qm1 = new_qm;
+		qs2 = qs1;
+		qs1 = new_qs;
 	}
+	// Calculate the squared magnitude for each frequency using the Goertzel algorithm
+	float magMark = qm1 * qm1 + qm2 * qm2 - qm1 * qm2 * coeffMark;
+	float magSpace = qs1 * qs1 + qs2 * qs2 - qs1 * qs2 * coeffSpace;
+	bool bit = magMark > magSpace;
+	handleBit(bit);
+}

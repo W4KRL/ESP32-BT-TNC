@@ -3,7 +3,6 @@
 #include "afskEncode.h"
 #include "configuration.h"
 
-
 BluetoothSerial BTSerial; // Bluetooth KISS Interface
 
 /**
