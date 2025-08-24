@@ -33,14 +33,14 @@ AFSKEncoderModern::AFSKEncoderModern() :
 {
     // Initialize config with defaults
     _config = {
-        .dacPin = DEFAULT_DAC_PIN,
+        .dacPin = DAC_PIN,
         .pttPin = -1,
         .pttLedPin = -1,
-        .markFreq = DEFAULT_MARK_FREQ,
-        .spaceFreq = DEFAULT_SPACE_FREQ,
-        .baudRate = DEFAULT_BAUD_RATE,
-        .amplitude = DEFAULT_AMPLITUDE,
-        .samplesPerCycle = DEFAULT_SAMPLES_PER_CYCLE,
+        .markFreq = MARK_FREQ,
+        .spaceFreq = SPACE_FREQ,
+        .baudRate = BAUD_RATE,
+        .amplitude = AMPLITUDE,
+        .samplesPerCycle = SAMPLES_PER_CYCLE,
         .initialized = false
     };
 }

@@ -40,19 +40,21 @@
 /**
  * @brief Modern AFSK Encoder class using latest ESP32 DAC API
  */
-class AFSKEncoderModern {
+class AFSKEncoderModern
+{
 public:
     // Configuration constants
-    static constexpr uint8_t DEFAULT_DAC_PIN = 25;          // GPIO25 (DAC1)
-    static constexpr uint16_t DEFAULT_MARK_FREQ = 1200;     // Mark frequency (Hz)
-    static constexpr uint16_t DEFAULT_SPACE_FREQ = 2200;    // Space frequency (Hz)
-    static constexpr uint16_t DEFAULT_BAUD_RATE = 1200;     // Baud rate (bps)
-    static constexpr uint8_t DEFAULT_SAMPLES_PER_CYCLE = 32; // Power of 2
-    static constexpr uint8_t DEFAULT_DAC_RESOLUTION = 8;    // 8-bit DAC
-    static constexpr float DEFAULT_AMPLITUDE = 0.8f;        // 80% of max amplitude
+    static constexpr uint8_t DAC_PIN = 25;           // GPIO25 (DAC1)
+    static constexpr uint16_t MARK_FREQ = 1200;      // Mark frequency (Hz)
+    static constexpr uint16_t SPACE_FREQ = 2200;     // Space frequency (Hz)
+    static constexpr uint16_t BAUD_RATE = 1200;      // Baud rate (bps)
+    static constexpr uint8_t SAMPLES_PER_CYCLE = 32; // Power of 2
+    static constexpr uint8_t DAC_RESOLUTION = 8;     // 8-bit DAC
+    static constexpr float AMPLITUDE = 0.8f;         // 80% of max amplitude
 
     // Error codes
-    enum class Status {
+    enum class Status
+    {
         SUCCESS = 0,
         ERROR_INVALID_PIN,
         ERROR_TIMER_INIT,
@@ -79,8 +81,8 @@ public:
      * @param pttLedPin Optional PTT LED indicator pin
      * @return Status code
      */
-    Status begin(uint8_t dacPin = DEFAULT_DAC_PIN, 
-                 int8_t pttPin = -1, 
+    Status begin(uint8_t dacPin = DAC_PIN,
+                 int8_t pttPin = -1,
                  int8_t pttLedPin = -1);
 
     /**
@@ -97,11 +99,11 @@ public:
      * @param samplesPerCycle Samples per waveform cycle (power of 2)
      * @return Status code
      */
-    Status setParameters(uint16_t markFreq = DEFAULT_MARK_FREQ,
-                        uint16_t spaceFreq = DEFAULT_SPACE_FREQ,
-                        uint16_t baudRate = DEFAULT_BAUD_RATE,
-                        float amplitude = DEFAULT_AMPLITUDE,
-                        uint8_t samplesPerCycle = DEFAULT_SAMPLES_PER_CYCLE);
+    Status setParameters(uint16_t markFreq = MARK_FREQ,
+                         uint16_t spaceFreq = SPACE_FREQ,
+                         uint16_t baudRate = BAUD_RATE,
+                         float amplitude = AMPLITUDE,
+                         uint8_t samplesPerCycle = SAMPLES_PER_CYCLE);
 
     /**
      * @brief Transmit an AX.25 packet using AFSK modulation
@@ -109,7 +111,7 @@ public:
      * @param length Length of the KISS frame
      * @return Status code
      */
-    Status transmitPacket(const uint8_t* kissFrame, size_t length);
+    Status transmitPacket(const uint8_t *kissFrame, size_t length);
 
     /**
      * @brief Transmit raw bits for testing purposes
@@ -117,7 +119,7 @@ public:
      * @param length Number of bits to transmit
      * @return Status code
      */
-    Status transmitBits(const uint8_t* bits, size_t length);
+    Status transmitBits(const uint8_t *bits, size_t length);
 
     /**
      * @brief Check if encoder is currently transmitting
@@ -128,7 +130,8 @@ public:
     /**
      * @brief Get current configuration
      */
-    struct Config {
+    struct Config
+    {
         uint8_t dacPin;
         int8_t pttPin;
         int8_t pttLedPin;
@@ -140,47 +143,47 @@ public:
         bool initialized;
     };
 
-    const Config& getConfig() const { return _config; }
+    const Config &getConfig() const { return _config; }
 
     /**
      * @brief Convert status code to human-readable string
      * @param status Status code to convert
      * @return String description of the status
      */
-    static const char* statusToString(Status status);
+    static const char *statusToString(Status status);
 
 private:
     // Configuration
     Config _config;
 
     // Hardware timer
-    hw_timer_t* _timer;
-    static constexpr uint8_t TIMER_DIVIDER = 8;    // For 0.1µs resolution
+    hw_timer_t *_timer;
+    static constexpr uint8_t TIMER_DIVIDER = 8; // For 0.1µs resolution
     static constexpr uint64_t TIMER_FREQ = APB_CLK_FREQ / TIMER_DIVIDER;
 
     // Waveform tables
-    uint8_t* _markWaveTable;
-    uint8_t* _spaceWaveTable;
-    volatile uint8_t _currentTable;  // 0 = mark, 1 = space
+    uint8_t *_markWaveTable;
+    uint8_t *_spaceWaveTable;
+    volatile uint8_t _currentTable; // 0 = mark, 1 = space
     volatile uint16_t _sampleIndex;
-    
+
     // Transmission state
     volatile bool _isTransmitting;
     volatile size_t _bitIndex;
     volatile size_t _totalBits;
     volatile uint64_t _bitStartTime;
-    const uint8_t* _bitBuffer;
+    const uint8_t *_bitBuffer;
 
     // Internal methods
     Status initializeHardware();
     Status generateWaveTables();
     void cleanupResources();
-    
-    size_t encodeAX25(const uint8_t* input, size_t inputLen, uint8_t* output, size_t maxOutputLen);
-    size_t encodeNRZI(const uint8_t* input, size_t inputLen, uint8_t* output, size_t maxOutputLen);
-    
+
+    size_t encodeAX25(const uint8_t *input, size_t inputLen, uint8_t *output, size_t maxOutputLen);
+    size_t encodeNRZI(const uint8_t *input, size_t inputLen, uint8_t *output, size_t maxOutputLen);
+
     void setPTT(bool enable);
-    void startTransmission(const uint8_t* bits, size_t bitCount);
+    void startTransmission(const uint8_t *bits, size_t bitCount);
     void stopTransmission();
 
     // Timer interrupt handler (must be static for C callback)
@@ -188,7 +191,7 @@ private:
     void IRAM_ATTR handleTimerInterrupt();
 
     // Static instance for ISR access
-    static AFSKEncoderModern* _instance;
+    static AFSKEncoderModern *_instance;
 };
 
 // Global instance for easy access (optional)
