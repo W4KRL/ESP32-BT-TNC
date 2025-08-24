@@ -36,7 +36,6 @@
 #define AFSK_ENCODE_MODERN_H
 
 #include <Arduino.h>
-#include <driver/dac.h>
 
 /**
  * @brief Modern AFSK Encoder class using latest ESP32 DAC API
@@ -185,7 +184,7 @@ private:
     void stopTransmission();
 
     // Timer interrupt handler (must be static for C callback)
-    static void IRAM_ATTR timerISR(void* arg);
+    static void IRAM_ATTR timerISR();
     void IRAM_ATTR handleTimerInterrupt();
 
     // Static instance for ISR access

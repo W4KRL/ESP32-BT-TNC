@@ -231,7 +231,7 @@ AFSKEncoderModern::Status AFSKEncoderModern::initializeHardware() {
         return Status::ERROR_TIMER_INIT;
     }
 
-    timerAttachInterrupt(_timer, &AFSKEncoderModern::timerISR, true);
+    timerAttachInterrupt(_timer, timerISR, true);
 
     return Status::SUCCESS;
 }
@@ -398,7 +398,7 @@ void AFSKEncoderModern::stopTransmission() {
     dacWrite(_config.dacPin, 128);
 }
 
-void IRAM_ATTR AFSKEncoderModern::timerISR(void* arg) {
+void IRAM_ATTR AFSKEncoderModern::timerISR() {
     if (_instance) {
         _instance->handleTimerInterrupt();
     }
