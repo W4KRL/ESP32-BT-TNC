@@ -1,7 +1,7 @@
 /**
  * @file configuration.h
  * @brief Configuration constants for ESP32 KISS TNC project.
- *
+ * @date 2025-08-26
  * This header defines Bluetooth device name, and pin assignments
  * for the ESP32-based KISS TNC (Terminal Node Controller).
  *
@@ -34,11 +34,11 @@ inline const IPAddress GATEWAY(192, 168, 0, 1);
 inline const IPAddress SUBNET(255, 255, 255, 0);
 
 // Pin definitions for transceiver interface
-#define RX_PIN 34			 // Audio from radio
-#define TX_PIN DAC_CHANNEL_1 // AFSK audio output pin must use DAC_CHANNEL_1, not GPIO25
-#define PTT_PIN 4			 // Push-to-Talk control pin
-#ifndef LED_BUILTIN			 // LED to indicate PTT status
-#define PTT_LED 2			 // Use GPIO2 if LED_BUILTIN is not defined
+#define RX_PIN 34	// Audio from radio
+#define TX_PIN 25	// AFSK audio output pin
+#define PTT_PIN 4	// Push-to-Talk control pin
+#ifndef LED_BUILTIN // LED to indicate PTT status
+#define PTT_LED 2	// Use GPIO2 if LED_BUILTIN is not defined
 #else
 #define PTT_LED LED_BUILTIN
 #endif
