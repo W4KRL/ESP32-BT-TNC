@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "btFunctions.h"
-#include "afskEncode.h"
+#include "afskEncoder.h"
 #include "configuration.h"
 
 BluetoothSerial BTSerial; // Bluetooth KISS Interface
